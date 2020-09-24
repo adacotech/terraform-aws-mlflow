@@ -2,12 +2,8 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "aws_secretsmanager_secret" "db_password" {
-  arn = var.database_password_secret_arn
-}
-
-data "aws_secretsmanager_secret_version" "db_password" {
-  secret_id = data.aws_secretsmanager_secret.db_password.id
+data "aws_ssm_parameter" "db_password" {
+  name = var.database_password_secret_arn
 }
 
 resource "aws_iam_role_policy" "db_secrets" {
@@ -20,13 +16,12 @@ resource "aws_iam_role_policy" "db_secrets" {
       {
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetResourcePolicy",
+          "ssm:GetParameters",
           "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret",
-          "secretsmanager:ListSecretVersionIds",
+          "kms:Decrypt",
         ]
         Resource = [
-          data.aws_secretsmanager_secret_version.db_password.arn,
+          data.aws_ssm_parameter.db_password.arn,
         ]
       },
     ]
@@ -58,28 +53,22 @@ resource "aws_security_group" "rds" {
   }
 }
 
-resource "aws_rds_cluster" "backend_store" {
-  cluster_identifier_prefix = var.unique_name
+resource "aws_db_instance" "backend_store" {
+  identifier                = var.unique_name
   tags                      = local.tags
-  engine                    = "aurora-mysql"
-  engine_version            = "5.7.mysql_aurora.2.07.1"
-  engine_mode               = "serverless"
+  engine                    = "mysql"
+  engine_version            = "8.0"
+  instance_class            = var.database_instance_class
   port                      = local.db_port
+  multi_az                  = true
+  allocated_storage         = 50
+  max_allocated_storage     = 2000
   db_subnet_group_name      = aws_db_subnet_group.rds.name
   vpc_security_group_ids    = [aws_security_group.rds.id]
-  availability_zones        = data.aws_availability_zones.available.names
-  master_username           = "ecs_task"
-  database_name             = "mlflow"
+  username                  = "admin"
+  name                      = "mlflow"
   skip_final_snapshot       = var.database_skip_final_snapshot
   final_snapshot_identifier = var.unique_name
-  master_password           = data.aws_secretsmanager_secret_version.db_password.secret_string
+  password                  = data.aws_ssm_parameter.db_password.value
   backup_retention_period   = 14
-
-  scaling_configuration {
-    auto_pause               = true
-    max_capacity             = var.database_max_capacity
-    min_capacity             = var.database_min_capacity
-    seconds_until_auto_pause = 300
-    timeout_action           = "ForceApplyCapacityChange"
-  }
 }

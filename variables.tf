@@ -1,3 +1,7 @@
+variable "main_zone_id" {
+  type = string
+}
+
 variable "unique_name" {
   type        = string
   description = "A unique name for this application (e.g. mlflow-team-name)"
@@ -74,6 +78,11 @@ variable "service_max_capacity" {
   type        = number
   default     = 2
   description = "Maximum number of instances for the ecs service. This will create an aws_appautoscaling_target that can later on be used to autoscale the MLflow instance"
+}
+
+variable "database_instance_class" {
+  type        = string
+  description = "RDS database instance class"
 }
 
 variable "database_subnet_ids" {
