@@ -1,5 +1,7 @@
 variable "main_zone_id" {
-  type = string
+  type        = string
+  description = "main zone id for apigateway domain"
+  default     = null
 }
 
 variable "unique_name" {
