@@ -210,3 +210,18 @@ resource "aws_lb_target_group" "mlflow" {
   }
 }
 
+resource "aws_lb_listener" "mlflow" {
+  load_balancer_arn = aws_lb.mlflow.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  lifecycle {
+    ignore_changes = [default_action]
+  }
+
+  default_action {
+    target_group_arn = aws_lb_target_group.mlflow.arn
+    type             = "forward"
+  }
+}
+
