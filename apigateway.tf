@@ -82,11 +82,11 @@ resource "aws_apigatewayv2_integration" "mlflow" {
 
 
 resource "aws_apigatewayv2_route" "mlflow" {
-  count                    = var.main_zone_id != null ? 1 : 0
-  api_id                   = aws_apigatewayv2_api.mlflow[0].id
+  count          = var.main_zone_id != null ? 1 : 0
+  api_id         = aws_apigatewayv2_api.mlflow[0].id
   operation_name = "ConnectRoute"
-  target = "integrations/${aws_apigatewayv2_integration.mlflow[0].id}"
-  route_key = "$default"
+  target         = "integrations/${aws_apigatewayv2_integration.mlflow[0].id}"
+  route_key      = "$default"
 }
 
 

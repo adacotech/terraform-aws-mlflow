@@ -69,8 +69,13 @@ resource "aws_cloudwatch_log_group" "mlflow" {
 }
 
 resource "aws_ecs_cluster" "mlflow" {
-  name = var.unique_name
-  tags = local.tags
+  name               = var.unique_name
+  tags               = local.tags
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 resource "aws_ecs_task_definition" "mlflow" {
