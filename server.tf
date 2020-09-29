@@ -41,6 +41,11 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   role       = aws_iam_role.ecs_execution.name
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  role       = aws_iam_role.ecs_task.name
+}
+
 resource "aws_security_group" "ecs_service" {
   name = "${var.unique_name}-ecs-service"
   tags = local.tags
