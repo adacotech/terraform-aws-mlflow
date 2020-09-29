@@ -120,13 +120,19 @@ resource "aws_ecs_task_definition" "mlflow" {
 }
 
 resource "aws_ecs_service" "mlflow" {
-  name             = var.unique_name
-  cluster          = aws_ecs_cluster.mlflow.id
-  task_definition  = aws_ecs_task_definition.mlflow.arn
-  desired_count    = 2
-  launch_type      = "FARGATE"
-  platform_version = "1.4.0"
+  name                               = var.unique_name
+  cluster                            = aws_ecs_cluster.mlflow.id
+  task_definition                    = aws_ecs_task_definition.mlflow.arn
+  desired_count                      = 2
+  platform_version                   = "1.4.0"
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
 
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+    base              = 1
+  }
 
   network_configuration {
     subnets         = var.service_subnet_ids
