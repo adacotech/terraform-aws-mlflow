@@ -1,5 +1,5 @@
 resource "aws_acm_certificate" "main_cert" {
-  domain_name       = "${var.unique_name}.${data.aws_route53_zone.main_domain_zone[0].name}"
+  domain_name       = "${var.subdomain_name}.${data.aws_route53_zone.main_domain_zone[0].name}"
   validation_method = "DNS"
   count             = var.main_zone_id != null ? 1 : 0
 
@@ -45,8 +45,15 @@ resource "aws_route53_record" "main" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "apigateway" {
+  name              = "/aws/apigateway/${var.unique_name}"
+  retention_in_days = var.service_log_retention_in_days
+  tags              = local.tags
+}
+
+
 resource "aws_apigatewayv2_domain_name" "mlflow" {
-  domain_name = "${var.unique_name}.${data.aws_route53_zone.main_domain_zone[0].name}"
+  domain_name = "${var.subdomain_name}.${data.aws_route53_zone.main_domain_zone[0].name}"
   count       = var.main_zone_id != null ? 1 : 0
 
   domain_name_configuration {
@@ -68,6 +75,11 @@ resource "aws_apigatewayv2_stage" "mlflow" {
   api_id      = aws_apigatewayv2_api.mlflow[0].id
   name        = "$default"
   auto_deploy = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.apigateway.arn
+    format = "$context.identity.sourceIp,$context.requestTime,$context.httpMethod,$context.routeKey,$context.protocol,$context.status,$context.responseLength,$context.requestId"
+  }
 }
 
 resource "aws_apigatewayv2_integration" "mlflow" {

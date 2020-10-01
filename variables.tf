@@ -9,6 +9,11 @@ variable "unique_name" {
   description = "A unique name for this application (e.g. mlflow-team-name)"
 }
 
+variable "subdomain_name" {
+  type        = string
+  description = "A unique name for subdomain (e.g. mlflow-team-name)"
+}
+
 variable "tags" {
   type        = map(string)
   default     = {}
