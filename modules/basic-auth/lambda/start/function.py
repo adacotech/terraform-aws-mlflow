@@ -32,7 +32,7 @@ def lambda_handler(event, context):
         if validate_auth(get_authorization_header(event), secret["AUTH_USERNAME"], secret["AUTH_PASSWORD"]):
             logger.warn("auth success")
             return {
-                "statusCode": "301",
+                "statusCode": "302",
                 "headers": {
                     "Location": f"https://{event['requestContext']['domainName']}/"
                 }
