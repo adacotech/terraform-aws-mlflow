@@ -13,7 +13,7 @@ def get_authorization_header(event):
     return lower_headers.get("authorization")
 
 def validate_auth(authorization_token, username, password):
-    if len(authorization_token) == 0:
+    if authorization_token is None:
         return False
     authorization_token = authorization_token.replace("Basic ", "")
     encoded_secret = base64.b64encode(f"{username}:{password}".encode()).decode()
