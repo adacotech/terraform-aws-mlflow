@@ -3,6 +3,7 @@ module "subdomain1" {
   main_zone_id   = var.main_zone_id
   subdomain_name = var.subdomain_name
   unique_name    = var.unique_name
+  count          = var.main_zone_id != null ? 1 : 0
 }
 
 module "basic-authorizer" {
@@ -10,6 +11,7 @@ module "basic-authorizer" {
   api_id      = aws_apigatewayv2_api.mlflow[0].id
   unique_name = var.unique_name
   secret_id   = var.secret_id
+  count       = var.main_zone_id != null ? 1 : 0
 }
 
 resource "aws_cloudwatch_log_group" "apigateway" {
@@ -55,14 +57,14 @@ resource "aws_apigatewayv2_route" "mlflow" {
   target             = "integrations/${aws_apigatewayv2_integration.mlflow[0].id}"
   route_key          = "$default"
   authorization_type = "CUSTOM"
-  authorizer_id      = module.basic-authorizer.authorizer_id
+  authorizer_id      = module.basic-authorizer[0].authorizer_id
 }
 
 
 resource "aws_apigatewayv2_api_mapping" "mlflow" {
   count       = var.main_zone_id != null ? 1 : 0
   api_id      = aws_apigatewayv2_api.mlflow[0].id
-  domain_name = module.subdomain1.apigatewayv2_domain_id
+  domain_name = module.subdomain1[0].apigatewayv2_domain_id
   stage       = aws_apigatewayv2_stage.mlflow[0].id
 }
 
