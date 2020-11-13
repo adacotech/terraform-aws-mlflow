@@ -113,6 +113,11 @@ resource "aws_lambda_function" "start" {
   handler          = "function.lambda_handler"
   runtime          = "python3.8"
   source_code_hash = data.archive_file.start.output_base64sha256
+  environment {
+    variables = {
+      SECRET_ID = var.secret_id
+    }
+  }
 }
 
 /* basic auth request startpoint */
