@@ -92,6 +92,12 @@ variable "database_instance_class" {
   description = "RDS database instance class"
 }
 
+variable "rds_is_multi_az" {
+  type        = bool
+  description = "Configuration that the RDS database is multi AZ instance"
+  default     = false
+}
+
 variable "database_subnet_ids" {
   type        = list(string)
   description = "List of subnets where the RDS database will be deployed"
@@ -147,4 +153,9 @@ variable "artifact_bucket_encryption_key_arn" {
   description = "ARN of the key used to encrypt the bucket. Only needed if you set aws:kms as encryption algorithm."
   type        = string
   default     = null
+}
+
+variable "secret_id" {
+  type        = string
+  description = "authentication secret id by secrets manager"
 }

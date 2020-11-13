@@ -60,7 +60,7 @@ resource "aws_db_instance" "backend_store" {
   engine_version            = "8.0"
   instance_class            = var.database_instance_class
   port                      = local.db_port
-  multi_az                  = true
+  multi_az                  = var.rds_is_multi_az
   allocated_storage         = 50
   max_allocated_storage     = 2000
   db_subnet_group_name      = aws_db_subnet_group.rds.name
