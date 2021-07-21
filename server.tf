@@ -124,6 +124,48 @@ resource "aws_ecs_task_definition" "mlflow" {
   memory                   = var.service_memory
 }
 
+resource "aws_ecs_task_definition" "mlflow_upgrade" {
+  family = "${var.unique_name}-upgrade"
+  tags   = local.tags
+  container_definitions = jsonencode(concat([
+    {
+      name      = "mlflow"
+      image     = "adacotechjp/mlflow:${var.service_image_tag}"
+      essential = true
+
+      # As of version 1.9.1, MLflow doesn't support specifying the backend store uri as an environment variable. ECS doesn't allow evaluating secret environment variables from within the command. Therefore, we are forced to override the entrypoint and assume the docker image has a shell we can use to interpolate the secret at runtime.
+      entryPoint = ["sh", "-c"]
+      command = [
+        "/bin/sh -c \"poetry run mlflow db upgrade mysql+pymysql://${aws_db_instance.backend_store.username}:`echo -n $DB_PASSWORD`@${aws_db_instance.backend_store.endpoint}/${aws_db_instance.backend_store.name}\""
+      ]
+      portMappings = [{ containerPort = local.service_port }]
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = data.aws_ssm_parameter.db_password.arn
+        },
+      ]
+      logConfiguration = {
+        logDriver     = "awslogs"
+        secretOptions = null
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.mlflow.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "cis"
+        }
+      }
+    },
+  ], var.service_sidecar_container_definitions))
+
+  network_mode             = "awsvpc"
+  task_role_arn            = aws_iam_role.ecs_task.arn
+  execution_role_arn       = aws_iam_role.ecs_execution.arn
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.service_cpu
+  memory                   = var.service_memory
+}
+
+
 resource "aws_ecs_service" "mlflow" {
   name                               = var.unique_name
   cluster                            = aws_ecs_cluster.mlflow.id
